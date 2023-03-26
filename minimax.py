@@ -91,9 +91,9 @@ def O_move(board):
     print("ERROR! No Valid Move!")
 
 class Node:
-    def __init__(self, board, depth, visited, parent=None, chosenChild=None, x_position=None, score=None):
+    def __init__(self, board, level, visited, parent=None, chosenChild=None, x_position=None, score=None):
         self.board = board
-        self.depth = depth
+        self.level = level
         self.visited = visited
         self.parent = parent
         self.chosenChild = chosenChild
@@ -132,10 +132,10 @@ def X_move(board):
 
             # Create child nodes based on empty spaces
             for space in boardEmptySpaces:
-                child = Node(depth=currentNode.depth+1, parent=currentNode, visited=False, board=[[currentNode.board[0][0],currentNode.board[0][1],currentNode.board[0][1]],[currentNode.board[1][0],currentNode.board[1][1],currentNode.board[1][1]],[currentNode.board[2][0],currentNode.board[2][1],currentNode.board[2][1]]])
+                child = Node(level=currentNode.level+1, parent=currentNode, visited=False, board=[[currentNode.board[0][0],currentNode.board[0][1],currentNode.board[0][2]],[currentNode.board[1][0],currentNode.board[1][1],currentNode.board[1][2]],[currentNode.board[2][0],currentNode.board[2][1],currentNode.board[2][2]]])
 
-                # Update child's board with X/O move based on currentNode/parent's depth
-                if(currentNode.depth%2 != 0): 
+                # Update child's board with X/O move based on currentNode/parent's level
+                if(currentNode.level%2 != 0): 
                     child.board[space[0]][space[1]] = X
                     child.x_position = space
                 else:
@@ -158,8 +158,7 @@ def X_move(board):
             # root
             if(currentNode.parent == None): continue
 
-            # currentNode is a leaf or a parent being revisited after all children have been visited (to update it's parent's score)
-            currentNode.score = (points[board_evaluation] - currentNode.depth) if currentNode.score == None else currentNode.score # might be creating bug, rewriting scores
+            currentNode.score = (points[board_evaluation] - (currentNode.level-1)) if currentNode.score == None else currentNode.score
 
             # Compare (currentNode)child's score with parent's before going to sibling(if there are any) for th
             if currentNode.parent.score == None:
@@ -169,7 +168,7 @@ def X_move(board):
                 continue
             
             
-            if currentNode.parent.depth%2 != 0:
+            if currentNode.parent.level%2 != 0:
                 # MAX
                 if currentNode.score > currentNode.parent.score:
                     currentNode.parent.score = currentNode.score
@@ -178,6 +177,7 @@ def X_move(board):
                 # MIN
                 if currentNode.score < currentNode.parent.score:
                     currentNode.parent.score = currentNode.score
+                    currentNode.parent.chosenChild = currentNode
 
      
     # A chance an error might occur because None.x_position 
@@ -189,9 +189,9 @@ def X_move(board):
             
 
 
-board = [[X, EMPTY, EMPTY],
-         [O, X, O],
-         [X, EMPTY, O]]
+board = [[X, EMPTY, X],
+         [EMPTY, EMPTY, O],
+         [EMPTY, O, EMPTY]]
 
 game_winner = GAME_INCOMPLETE
 # Game Loop
