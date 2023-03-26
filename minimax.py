@@ -110,27 +110,17 @@ def empty_spaces(board):
             if board[r][c] == EMPTY:
                 emptySpaces.append((r, c))
 
-    if len(empty_spaces) == 0:
+    if len(emptySpaces) == 0:
         return None
     
     return emptySpaces
-
-# returns the node whose score was chosen based on MIN or MAX which is determined by parent's depth
-def miniMax(parent, child):
-    if parent.depth%2 != 0:
-        # MAX
-        return parent if (parent.score >= child.score) else child
-    else:
-        # MIN
-        return parent if (parent.score <= child.score) else child
-
 
 def X_move(board):
     points = [0, 0, 10, -10]
     root = Node(board, 1, False)
     q = [root]
 
-    while not len(q) == 0:
+    while len(q) != 0:
         currentNode = q.pop(0)
 
         board_evaluation = evaluate_game(currentNode.board)
@@ -138,7 +128,6 @@ def X_move(board):
         if board_evaluation == GAME_INCOMPLETE and not currentNode.visited:
             # currentNode has children
             boardEmptySpaces = empty_spaces(currentNode.board)
-
             children = []
 
             # Create child nodes based on empty spaces
@@ -161,41 +150,48 @@ def X_move(board):
             # Which will be used to update it's parent's score
             children.append(currentNode)
 
-            q = children.extend(q)
+            children.extend(q)
+            q = children
+
             continue
         else:
-            # currentNode is a leaf or a parent being revisited after all children have been visited (to update it's parent's score)
-            currentNode.score = points[board_evaluation] - currentNode.depth
+            # root
+            if(currentNode.parent == None): continue
 
-            # Compare (currentNode)child's score with parent's before going to sibling(if there are any)
+            # currentNode is a leaf or a parent being revisited after all children have been visited (to update it's parent's score)
+            currentNode.score = (points[board_evaluation] - currentNode.depth) if currentNode.score == None else currentNode.score # might be creating bug, rewriting scores
+
+            # Compare (currentNode)child's score with parent's before going to sibling(if there are any) for th
             if currentNode.parent.score == None:
                 # CurrentNode is Parent's first child node
                 currentNode.parent.score = currentNode.score
                 currentNode.parent.chosenChild = currentNode
+                continue
+            
+            
+            if currentNode.parent.depth%2 != 0:
+                # MAX
+                if currentNode.score > currentNode.parent.score:
+                    currentNode.parent.score = currentNode.score
+                    currentNode.parent.chosenChild = currentNode
             else:
-                # Compare score based on parent's depth - depth determines MIN or MAX
-                chosenNode = miniMax(currentNode.parent, currentNode)
-                currentNode.parent.score = chosenNode.score
-                currentNode.parent.chosenChild = chosenNode
-    
-    # All nodes from this tree have been visited
+                # MIN
+                if currentNode.score < currentNode.parent.score:
+                    currentNode.parent.score = currentNode.score
+
+     
     # A chance an error might occur because None.x_position 
-    return root.chosenChild.chosenChild.x_position            
-                
+    print("ROOT NODE: ")
+    print("Score: ", root.score)
+    print("HAS BEST MOVE: ", False if root.chosenChild==None else True)
+    print("Best move for X: ", None if root.chosenChild==None else root.chosenChild.x_position)
+    return root.chosenChild.x_position        
+            
 
 
-    # START FILLER CODE, just picks first valid move!
-    for row in range(len(board)):
-        for col in range(len(board[row])):
-            if board[row][col] == EMPTY:
-                return (row, col)
-    print("ERROR! No Valid Move!")
-    # END FILLER CODE
-
-
-board = [[EMPTY, EMPTY, EMPTY],
-         [EMPTY, EMPTY, EMPTY],
-         [EMPTY, EMPTY, EMPTY]]
+board = [[X, EMPTY, EMPTY],
+         [O, X, O],
+         [X, EMPTY, O]]
 
 game_winner = GAME_INCOMPLETE
 # Game Loop
